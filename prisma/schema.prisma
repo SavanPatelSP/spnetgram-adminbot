@@ -1,0 +1,1336 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+  LIMITED
+}
+
+enum StaffRole {
+  OWNER
+  SUPER_ADMINISTRATOR
+  CEO
+  CTO
+  COO
+  SUPPORT_AGENT
+  SENIOR_SUPPORT
+  SUPPORT_MANAGER
+  ADMIN
+  EXECUTIVE
+  DEPARTMENT_HEAD
+  MANAGER
+  SENIOR_STAFF
+  STAFF
+  HELPER
+  SECURITY_ANALYST
+  SECURITY_LEAD
+  MONITORING_OPERATOR
+  INCIDENT_RESPONDER
+  INCIDENT_COMMANDER
+  COMPLIANCE_OFFICER
+  ANALYTICS_VIEWER
+  AUDIT_MANAGER
+}
+
+enum PermissionAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  APPROVE
+  REJECT
+  ASSIGN
+  ESCALATE
+}
+
+enum PermissionResource {
+  USERS
+  STAFF
+  MODERATION
+  CASES
+  TICKETS
+  SLA
+  AUDIT
+  INVESTIGATIONS
+  NOTIFICATIONS
+  SETTINGS
+  DEPARTMENTS
+  PREMIUM
+  ECONOMY
+  KPI
+  APPROVALS
+  SECURITY
+  MONITORING
+  INCIDENTS
+  ANALYTICS
+  SYNC
+  DASHBOARD
+}
+
+enum ModerationActionType {
+  WARN
+  MUTE
+  UNMUTE
+  BAN
+  UNBAN
+  SUSPEND
+  UNSUSPEND
+  FREEZE
+  UNFREEZE
+  SHADOWBAN
+}
+
+enum CaseStatus {
+  OPEN
+  INVESTIGATING
+  PENDING_EVIDENCE
+  RESOLVED
+  DISMISSED
+  APPEALED
+}
+
+enum CasePriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketStatus {
+  OPEN
+  WAITING_REPLY
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+  EMERGENCY
+}
+
+enum InvestigationStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  COMPLETED
+  ARCHIVED
+}
+
+enum NotificationType {
+  SYSTEM
+  CASE_ASSIGNMENT
+  TICKET_REPLY
+  SLA_BREACH
+  MODERATION_ACTION
+  INVESTIGATION_UPDATE
+  PERMISSION_CHANGE
+  PREMIUM_EXPIRY
+  ECONOMY_TRANSACTION
+  SECURITY_ALERT
+  APPROVAL_REQUEST
+  KPI_ALERT
+  STAFF_ANNOUNCEMENT
+  TICKET_NEW
+  TICKET_ASSIGNED
+  TICKET_CLAIMED
+  TICKET_ESCALATED
+  TICKET_RESOLVED
+  TICKET_REOPENED
+  MODERATION_WARNING
+  MODERATION_BAN
+  MODERATION_SUSPENSION
+  MODERATION_APPEAL
+  MODERATION_CRITICAL
+  PREMIUM_PURCHASE
+  PREMIUM_APPROVAL
+  PREMIUM_RENEWAL
+  ECONOMY_LARGE_TRANSFER
+  ECONOMY_COMPENSATION
+  ECONOMY_REFUND
+  ECONOMY_SUSPICIOUS
+  SECURITY_LOGIN_ANOMALY
+  SECURITY_MULTI_DEVICE
+  SECURITY_RISK
+  SECURITY_FRAUD
+  SECURITY_BREACH
+  STAFF_PROMOTION
+  STAFF_DEMOTION
+  STAFF_SUSPENSION
+  STAFF_KPI_ALERT
+  STAFF_DEPARTMENT_TRANSFER
+  SYSTEM_DOWNTIME
+  SYSTEM_DATABASE
+  SYSTEM_INFRASTRUCTURE
+  SYSTEM_MAINTENANCE
+}
+
+enum SecurityEventType {
+  LOGIN
+  LOGOUT
+  FAILED_LOGIN
+  SESSION_CREATED
+  SESSION_EXPIRED
+  DEVICE_REGISTERED
+  DEVICE_UNREGISTERED
+  RISK_SCORE_CHANGED
+  FRAUD_DETECTED
+  SECURITY_INCIDENT
+  EMERGENCY
+  PANIC
+  LOCKDOWN
+  UNLOCKDOWN
+}
+
+enum SecuritySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentPriority {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum IncidentStatus {
+  DETECTED
+  INVESTIGATING
+  CONTAINED
+  RESOLVED
+  CLOSED
+}
+
+enum MonitoringMetric {
+  HEALTH
+  LATENCY
+  UPTIME
+  CPU
+  MEMORY
+  DISK
+  DATABASE
+  CACHE
+  QUEUE
+  ERRORS
+}
+
+enum NotificationCategory {
+  TICKET
+  MODERATION
+  PREMIUM
+  ECONOMY
+  SECURITY
+  STAFF
+  SYSTEM
+}
+
+enum AnalyticsMetric {
+  GROWTH
+  REVENUE
+  STAFF
+  MODERATION
+  SECURITY
+  ECONOMY
+}
+
+enum NotificationChannel {
+  IN_APP
+  TELEGRAM
+  EMAIL
+}
+
+enum DepartmentType {
+  MODERATION
+  SUPPORT
+  INVESTIGATIONS
+  ENGINEERING
+  ADMINISTRATION
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  TRIALING
+}
+
+enum PremiumTier {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  REFUND
+  TRANSFER_IN
+  TRANSFER_OUT
+  ADMIN_GRANT
+  ADMIN_DEDUCT
+  REWARD
+  PENALTY
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum KpiPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum ApprovalRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  REQUIRE_INFO
+}
+
+model Role {
+  id        String   @id @default(cuid())
+  name      StaffRole @unique
+  label     String?
+  isSystem  Boolean  @default(false)
+  priority  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  permissions  RolePermission[]
+  assignments  StaffRoleAssignment[]
+
+  @@index([name])
+  @@map("roles")
+}
+
+model Permission {
+  id        String           @id @default(cuid())
+  resource   PermissionResource
+  action     PermissionAction
+  label      String?
+  isSystem   Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+
+  roleAssignments RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String   @id @default(cuid())
+  roleId       String
+  permissionId String
+  grantedAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model StaffRoleAssignment {
+  id        String   @id @default(cuid())
+  staffId   String
+  roleId    String
+  assignedBy String?
+  assignedAt DateTime @default(now())
+  revokedAt DateTime?
+
+  staff StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  role  Role        @relation(fields: [roleId], references: [id])
+
+  @@index([staffId])
+  @@index([roleId])
+  @@map("staff_role_assignments")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  telegramId    BigInt?    @unique
+  telegramUsername String?
+  firstName     String?
+  lastName      String?
+  languageCode  String?
+  status        UserStatus @default(ACTIVE)
+  isStaff       Boolean    @default(false)
+  trustScore    Float      @default(0)
+  riskScore     Float      @default(0)
+  reputationScore Float    @default(0)
+  warningCount  Int        @default(0)
+  metadata      Json?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  staffMember     StaffMember?
+  moderationActions ModerationAction[]
+  assignedModerations ModerationAction[] @relation("Moderator")
+  cases           Case[]      @relation("Reporter")
+  assignedCases   Case[]      @relation("Assignee")
+  tickets         Ticket[]
+  assignedTickets Ticket[]    @relation("AssignedTickets")
+  investigations  Investigation[] @relation("ReporterInvestigation")
+  assignedInvestigations Investigation[] @relation("AssigneeInvestigation")
+  ticketReplies   TicketReply[]
+  notifications   Notification[]
+  actorAuditLogs  AuditLog[]     @relation("AuditActor")
+  targetAuditLogs AuditLog[]     @relation("AuditTarget")
+  subscriptions   UserSubscription[]
+  economyAccount  EconomyAccount?
+  executedTransactions Transaction[] @relation("TransactionExecutedBy")
+  approvalRequests  ApprovalRequest[] @relation("ApprovalRequester")
+  approvalStepApprovals ApprovalStep[]
+  securityEvents    SecurityEvent[]
+  deviceSessions    DeviceSession[]
+  loginHistory      LoginHistory[]
+  assignedIncidents Incident[]
+  incidentTimelineEntries IncidentTimeline[]
+  incidentReports   IncidentReport[]
+
+  @@index([telegramId])
+  @@index([status])
+  @@map("users")
+}
+
+model StaffMember {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  isActive  Boolean  @default(true)
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleAssignments StaffRoleAssignment[]
+  auditLogs       AuditLog[]
+  departmentMemberships DepartmentStaff[]
+  kpiRecords      KpiRecord[]
+  kpiTargets      KpiTarget[]
+  loginHistory    LoginHistory[]
+  permissionOverrides    PermissionOverride[]
+  specialAccessGrants    SpecialAccessGrant[]
+  temporaryPermissions   TemporaryPermission[]
+
+  @@index([isActive])
+  @@map("staff_members")
+}
+
+model ModerationAction {
+  id          String             @id @default(cuid())
+  moderatorId String
+  targetId    String
+  actionType  ModerationActionType
+  reason      String?
+  duration    Int?
+  evidence    Json?
+  createdAt   DateTime           @default(now())
+
+  moderator User @relation("Moderator", fields: [moderatorId], references: [id])
+  target    User @relation(fields: [targetId], references: [id])
+
+  @@index([moderatorId])
+  @@index([targetId])
+  @@index([actionType])
+  @@map("moderation_actions")
+}
+
+model Case {
+  id          String       @id @default(cuid())
+  referenceId String       @unique @default(cuid())
+  title       String
+  description String?
+  status      CaseStatus   @default(OPEN)
+  priority    CasePriority @default(MEDIUM)
+  reporterId  String
+  assigneeId  String?
+  module      String?
+  metadata    Json?
+  tags        String[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  closedAt    DateTime?
+
+  reporter       User              @relation("Reporter", fields: [reporterId], references: [id])
+  assignee       User?             @relation("Assignee", fields: [assigneeId], references: [id])
+  tickets        Ticket[]
+  investigations Investigation[]
+  slaEntries     SlaEntry[]
+  notifications  Notification[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([assigneeId])
+  @@index([reporterId])
+  @@index([referenceId])
+  @@map("cases")
+}
+
+model Ticket {
+  id          String        @id @default(cuid())
+  referenceId String        @unique @default(cuid())
+  caseId      String?
+  subject     String
+  description String?
+  status      TicketStatus  @default(OPEN)
+  priority    TicketPriority @default(NORMAL)
+  reporterId  String
+  assigneeId  String?
+  metadata    Json?
+  tags        String[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  closedAt    DateTime?
+
+  case           Case?            @relation(fields: [caseId], references: [id])
+  reporter       User             @relation(fields: [reporterId], references: [id])
+  assignee       User?            @relation("AssignedTickets", fields: [assigneeId], references: [id])
+  ticketReplies  TicketReply[]
+  slaEntries     SlaEntry[]
+  notifications  Notification[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([assigneeId])
+  @@index([reporterId])
+  @@index([caseId])
+  @@map("tickets")
+}
+
+model TicketReply {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String
+  content   String
+  isStaff   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([ticketId])
+  @@map("ticket_replies")
+}
+
+model SlaEntry {
+  id          String   @id @default(cuid())
+  caseId      String?
+  ticketId    String?
+  policyName  String
+  targetHours Float
+  startedAt   DateTime @default(now())
+  deadlineAt  DateTime
+  breachedAt  DateTime?
+  resolvedAt  DateTime?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+
+  case   Case?   @relation(fields: [caseId], references: [id])
+  ticket Ticket? @relation(fields: [ticketId], references: [id])
+
+  @@index([status])
+  @@index([deadlineAt])
+  @@index([caseId])
+  @@index([ticketId])
+  @@map("sla_entries")
+}
+
+model Investigation {
+  id               String               @id @default(cuid())
+  referenceId      String               @unique @default(cuid())
+  caseId           String?
+  title            String
+  description      String?
+  status           InvestigationStatus   @default(DRAFT)
+  severity         CasePriority          @default(MEDIUM)
+  reporterId       String
+  assigneeId       String?
+  evidence         Json?
+  findings         String?
+  resolution       String?
+  tags             String[]
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  completedAt      DateTime?
+  archivedAt       DateTime?
+
+  case             Case?                  @relation(fields: [caseId], references: [id])
+  reporter         User                   @relation("ReporterInvestigation", fields: [reporterId], references: [id])
+  assignee         User?                  @relation("AssigneeInvestigation", fields: [assigneeId], references: [id])
+  notifications    Notification[]
+
+  @@index([status])
+  @@index([assigneeId])
+  @@index([caseId])
+  @@index([referenceId])
+  @@map("investigations")
+}
+
+model Notification {
+  id              String             @id @default(cuid())
+  userId          String
+  type            NotificationType
+  channel         NotificationChannel @default(IN_APP)
+  category        NotificationCategory?
+  title           String
+  body            String?
+  data            Json?
+  referenceType   String?
+  referenceId     String?
+  caseId          String?
+  ticketId        String?
+  investigationId String?
+  approvalRequestId String?
+  readAt          DateTime?
+  deliveredAt     DateTime?
+  createdAt       DateTime           @default(now())
+
+  user           User            @relation(fields: [userId], references: [id])
+  case           Case?            @relation(fields: [caseId], references: [id])
+  ticket         Ticket?          @relation(fields: [ticketId], references: [id])
+  investigation  Investigation?   @relation(fields: [investigationId], references: [id])
+  approvalRequest ApprovalRequest? @relation(fields: [approvalRequestId], references: [id])
+
+  @@index([userId, readAt])
+  @@index([type])
+  @@index([createdAt])
+  @@index([caseId])
+  @@index([ticketId])
+  @@index([investigationId])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  staffId     String?
+  actorId     String?
+  targetId    String?
+  action      String
+  resource    String
+  resourceId  String?
+  reason      String?
+  description String?
+  beforeState Json?
+  afterState  Json?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  result      String?
+  createdAt   DateTime @default(now())
+
+  actor       User?        @relation("AuditActor", fields: [actorId], references: [id])
+  target      User?        @relation("AuditTarget", fields: [targetId], references: [id])
+  staffMember StaffMember? @relation(fields: [staffId], references: [id])
+
+  @@index([staffId])
+  @@index([actorId])
+  @@index([targetId])
+  @@index([action])
+  @@index([resource])
+  @@index([resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Department {
+  id          String         @id @default(cuid())
+  name        String         @unique
+  description String?
+  type        DepartmentType
+  isActive    Boolean        @default(true)
+  leadId      String?
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  members     DepartmentStaff[]
+  kpiRecords  KpiRecord[]
+  kpiTargets  KpiTarget[]
+
+  @@index([type])
+  @@index([isActive])
+  @@map("departments")
+}
+
+model DepartmentStaff {
+  id           String   @id @default(cuid())
+  departmentId String
+  staffId      String
+  role         String   @default("MEMBER")
+  joinedAt     DateTime @default(now())
+
+  department Department  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  staff      StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, staffId])
+  @@index([staffId])
+  @@map("department_staff")
+}
+
+model PremiumPlan {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  tier        PremiumTier   @default(BASIC)
+  description String?
+  price       Decimal       @default(0)
+  interval    String        @default("monthly")
+  features    Json?
+  isActive    Boolean       @default(true)
+  maxStaff    Int           @default(1)
+  maxCases    Int           @default(10)
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  subscriptions UserSubscription[]
+
+  @@index([tier])
+  @@index([isActive])
+  @@map("premium_plans")
+}
+
+model UserSubscription {
+  id                 String             @id @default(cuid())
+  userId             String
+  planId             String
+  status             SubscriptionStatus @default(TRIALING)
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  trialEndsAt        DateTime?
+  cancelledAt        DateTime?
+  metadata           Json?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user User        @relation(fields: [userId], references: [id])
+  plan PremiumPlan @relation(fields: [planId], references: [id])
+
+  @@unique([userId, planId])
+  @@index([userId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+  @@map("user_subscriptions")
+}
+
+model EconomyAccount {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Decimal  @default(0)
+  frozen    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@index([balance])
+  @@map("economy_accounts")
+}
+
+model Transaction {
+  id             String            @id @default(cuid())
+  accountId      String
+  type           TransactionType
+  amount         Decimal
+  currency       String            @default("credits")
+  description    String?
+  status         TransactionStatus @default(COMPLETED)
+  referenceType  String?
+  referenceId    String?
+  balanceBefore  Decimal
+  balanceAfter   Decimal
+  metadata       Json?
+  executedById   String?
+  createdAt      DateTime          @default(now())
+
+  account    EconomyAccount @relation(fields: [accountId], references: [id])
+  executedBy User?          @relation("TransactionExecutedBy", fields: [executedById], references: [id])
+
+  @@index([accountId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+model KpiDefinition {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  category    String
+  targetValue Float
+  unit        String
+  period      KpiPeriod @default(MONTHLY)
+  formula     String?
+  isActive    Boolean   @default(true)
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  records KpiRecord[]
+  targets KpiTarget[]
+
+  @@index([category])
+  @@index([isActive])
+  @@map("kpi_definitions")
+}
+
+model KpiRecord {
+  id           String   @id @default(cuid())
+  definitionId String
+  staffId      String?
+  departmentId String?
+  value        Float
+  achievedAt   DateTime @default(now())
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  definition KpiDefinition @relation(fields: [definitionId], references: [id])
+  staff      StaffMember?  @relation(fields: [staffId], references: [id])
+  department Department?   @relation(fields: [departmentId], references: [id])
+
+  @@index([definitionId])
+  @@index([staffId])
+  @@index([departmentId])
+  @@index([achievedAt])
+  @@map("kpi_records")
+}
+
+model KpiTarget {
+  id           String    @id @default(cuid())
+  definitionId String
+  departmentId String?
+  staffId      String?
+  targetValue  Float
+  period       KpiPeriod @default(MONTHLY)
+  startDate    DateTime
+  endDate      DateTime
+  isActive     Boolean   @default(true)
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  definition KpiDefinition @relation(fields: [definitionId], references: [id])
+  department Department?   @relation(fields: [departmentId], references: [id])
+  staff      StaffMember?  @relation(fields: [staffId], references: [id])
+
+  @@index([definitionId])
+  @@index([departmentId])
+  @@index([staffId])
+  @@map("kpi_targets")
+}
+
+model ApprovalRequest {
+  id           String                 @id @default(cuid())
+  referenceId  String                 @unique @default(cuid())
+  title        String
+  description  String?
+  status       ApprovalRequestStatus  @default(PENDING)
+  priority     String                 @default("NORMAL")
+  requesterId  String
+  resourceType String
+  resourceId   String?
+  payload      Json?
+  reason       String?
+  metadata     Json?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  resolvedAt   DateTime?
+
+  requester User           @relation("ApprovalRequester", fields: [requesterId], references: [id])
+  steps     ApprovalStep[]
+  notifications Notification[]
+
+  @@index([status])
+  @@index([requesterId])
+  @@index([resourceType])
+  @@index([referenceId])
+  @@map("approval_requests")
+}
+
+model ApprovalStep {
+  id          String   @id @default(cuid())
+  requestId   String
+  stepOrder   Int
+  approverId  String?
+  roleRequired String?
+  status      String   @default("PENDING")
+  comment     String?
+  assignedAt  DateTime @default(now())
+  respondedAt DateTime?
+
+  request  ApprovalRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  approver User?           @relation(fields: [approverId], references: [id])
+
+  @@unique([requestId, stepOrder])
+  @@index([requestId])
+  @@index([approverId])
+  @@index([status])
+  @@map("approval_steps")
+}
+
+model SecurityEvent {
+  id          String           @id @default(cuid())
+  userId      String?
+  eventType   SecurityEventType
+  severity    SecuritySeverity @default(MEDIUM)
+  source      String?
+  ipAddress   String?
+  userAgent   String?
+  location    Json?
+  metadata    Json?
+  description String?
+  timestamp   DateTime         @default(now())
+  createdAt   DateTime         @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([severity])
+  @@index([timestamp])
+  @@map("security_events")
+}
+
+model DeviceSession {
+  id          String    @id @default(cuid())
+  userId      String
+  deviceId    String?
+  deviceName  String?
+  deviceType  String?
+  ipAddress   String?
+  userAgent   String?
+  isActive    Boolean   @default(true)
+  lastActive  DateTime  @default(now())
+  expiresAt   DateTime?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+  @@index([deviceId])
+  @@map("device_sessions")
+}
+
+model LoginHistory {
+  id         String   @id @default(cuid())
+  userId     String?
+  staffId    String?
+  ipAddress  String?
+  userAgent  String?
+  success    Boolean  @default(true)
+  failReason String?
+  timestamp  DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  user  User?        @relation(fields: [userId], references: [id])
+  staff StaffMember? @relation(fields: [staffId], references: [id])
+
+  @@index([userId])
+  @@index([staffId])
+  @@index([timestamp])
+  @@index([success])
+  @@map("login_history")
+}
+
+model ServiceStatus {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  displayName String?
+  type        String?
+  status      String           @default("UNKNOWN")
+  metric      MonitoringMetric?
+  value       Float?
+  unit        String?
+  message     String?
+  lastChecked DateTime         @default(now())
+  lastDownAt  DateTime?
+  isUp        Boolean          @default(true)
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  alerts MonitoringAlert[]
+
+  @@index([status])
+  @@index([isUp])
+  @@index([type])
+  @@map("service_statuses")
+}
+
+model MonitoringAlert {
+  id              String    @id @default(cuid())
+  serviceId       String?
+  type            String
+  severity        String    @default("WARNING")
+  metric          String?
+  value           Float?
+  threshold       Float?
+  message         String?
+  acknowledged    Boolean   @default(false)
+  acknowledgedBy  String?
+  resolvedAt      DateTime?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  service ServiceStatus? @relation(fields: [serviceId], references: [id])
+
+  @@index([serviceId])
+  @@index([severity])
+  @@index([acknowledged])
+  @@index([createdAt])
+  @@map("monitoring_alerts")
+}
+
+model Incident {
+  id          String           @id @default(cuid())
+  referenceId String           @unique @default(cuid())
+  title       String
+  description String?
+  status      IncidentStatus   @default(DETECTED)
+  priority    IncidentPriority @default(P3)
+  severity    SecuritySeverity @default(MEDIUM)
+  category    String?
+  source      String?
+  assigneeId  String?
+  metadata    Json?
+  tags        String[]
+  detectedAt  DateTime         @default(now())
+  escalatedAt DateTime?
+  containedAt DateTime?
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  assignee User? @relation(fields: [assigneeId], references: [id])
+  timeline IncidentTimeline[]
+  reports  IncidentReport[]
+  rcaFindings IncidentRca[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([assigneeId])
+  @@index([referenceId])
+  @@index([createdAt])
+  @@map("incidents")
+}
+
+model IncidentTimeline {
+  id          String   @id @default(cuid())
+  incidentId  String
+  action      String
+  description String?
+  actorId     String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  actor    User?    @relation(fields: [actorId], references: [id])
+
+  @@index([incidentId])
+  @@index([createdAt])
+  @@map("incident_timeline")
+}
+
+model IncidentReport {
+  id          String   @id @default(cuid())
+  incidentId  String
+  title       String
+  body        String?
+  reportType  String   @default("INITIAL")
+  authorId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  author   User?    @relation(fields: [authorId], references: [id])
+
+  @@index([incidentId])
+  @@index([reportType])
+  @@map("incident_reports")
+}
+
+model IncidentRca {
+  id              String    @id @default(cuid())
+  incidentId      String
+  rootCause       String
+  contributingFactors Json?
+  impact          String?
+  recommendation  String?
+  actionItems     Json?
+  severity        String?
+  authorId        String?
+  isApproved      Boolean   @default(false)
+  approvedBy      String?
+  approvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@unique([incidentId])
+  @@index([incidentId])
+  @@map("incident_rca")
+}
+
+model AiSummary {
+  id          String   @id @default(cuid())
+  targetType  String
+  targetId    String
+  summaryType String
+  content     String
+  model       String   @default("gpt-4")
+  confidence  Float?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([summaryType])
+  @@index([createdAt])
+  @@map("ai_summaries")
+}
+
+model AiRecommendation {
+  id           String   @id @default(cuid())
+  targetType   String?
+  targetId     String?
+  category     String
+  title        String
+  description  String?
+  priority     String   @default("MEDIUM")
+  status       String   @default("PENDING")
+  confidence   Float?
+  reasoning    String?
+  metadata     Json?
+  appliedById  String?
+  appliedAt    DateTime?
+  dismissedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+  @@map("ai_recommendations")
+}
+
+model AnalyticsDashboard {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  layout      Json?
+  widgets     Json?
+  filters     Json?
+  ownerId     String?
+  isDefault   Boolean  @default(false)
+  isPublic    Boolean  @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([isDefault])
+  @@map("analytics_dashboards")
+}
+
+model AnalyticsMetricRecord {
+  id         String           @id @default(cuid())
+  metric     AnalyticsMetric
+  category   String?
+  value      Float
+  unit       String?
+  period     String?
+  label      String?
+  tags       Json?
+  recordedAt DateTime         @default(now())
+  createdAt  DateTime         @default(now())
+
+  @@index([metric])
+  @@index([category])
+  @@index([recordedAt])
+  @@map("analytics_metric_records")
+}
+
+model DeepLink {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  targetModule String
+  targetId     String
+  source       String?
+  expiresAt    DateTime?
+  maxClicks    Int?
+  clickCount   Int      @default(0)
+  metadata     Json?
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([code])
+  @@index([targetModule, targetId])
+  @@index([expiresAt])
+  @@map("deep_links")
+}
+
+model SyncEvent {
+  id          String    @id @default(cuid())
+  eventType   String
+  source      String    @default("spnetgram")
+  target      String    @default("adminbot")
+  entityType  String
+  entityId    String
+  action      String
+  payload     Json?
+  status      String    @default("PENDING")
+  error       String?
+  retryCount  Int       @default(0)
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([eventType])
+  @@map("sync_events")
+}
+
+enum PermissionSource {
+  DEPARTMENT
+  ROLE
+  RANK
+  WHITELIST
+  TEMPORARY_ASSIGNMENT
+  CUSTOM
+}
+
+model PermissionOverride {
+  id            String          @id @default(cuid())
+  staffId       String
+  resource      PermissionResource
+  action        PermissionAction
+  source        PermissionSource  @default(CUSTOM)
+  isGranted     Boolean          @default(true)
+  reason        String?
+  expiresAt     DateTime?
+  grantedBy     String?
+  grantedAt     DateTime         @default(now())
+  revokedAt     DateTime?
+  revokedBy     String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  staff StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, resource, action])
+  @@index([staffId])
+  @@index([expiresAt])
+  @@index([source])
+  @@map("permission_overrides")
+}
+
+model SpecialAccessGrant {
+  id          String   @id @default(cuid())
+  staffId     String
+  accessLevel String
+  scope       String?
+  reason      String?
+  grantedBy   String?
+  grantedAt   DateTime @default(now())
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  revokedBy   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  staff StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@index([expiresAt])
+  @@map("special_access_grants")
+}
+
+model TemporaryPermission {
+  id            String           @id @default(cuid())
+  staffId       String
+  resource      PermissionResource
+  action        PermissionAction
+  reason        String?
+  grantedBy     String?
+  grantedAt     DateTime         @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  revokedBy     String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  staff StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@index([expiresAt])
+  @@map("temporary_permissions")
+}
+
+model SensitiveAction {
+  id            String   @id @default(cuid())
+  actionType    String
+  title         String
+  description   String?
+  requiredApprovals Int    @default(1)
+  approvalRoles String[]
+  isActive      Boolean  @default(true)
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([actionType])
+  @@index([actionType])
+  @@map("sensitive_actions")
+}
+
+model AuditExport {
+  id          String   @id @default(cuid())
+  format      String   @default("CSV")
+  filters     Json?
+  totalRecords Int     @default(0)
+  fileUrl     String?
+  status      String   @default("PENDING")
+  requestedBy String?
+  completedAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("audit_exports")
+}
