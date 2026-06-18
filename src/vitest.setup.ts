@@ -1,5 +1,7 @@
 import { vi } from 'vitest'
 
+process.env.BOT_TOKEN = process.env.BOT_TOKEN || 'test-bot-token-placeholder'
+
 function createModelStub() {
   return {
     findUnique: vi.fn().mockResolvedValue(null),

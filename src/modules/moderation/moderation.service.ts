@@ -42,6 +42,7 @@ export class ModerationService {
       },
     })
 
+    const previousStatus = target.status
     const newStatus = ACTION_STATUS_MAP[data.actionType]
     if (newStatus) {
       await this.prisma.user.update({
@@ -56,6 +57,13 @@ export class ModerationService {
     )
     await this.eventBus.emit('moderation:action:created', { action, newStatus })
     await this.eventBus.emit('moderation:action:executed', { actionId: action.id, moderatorId: data.moderatorId, targetId: data.targetId, actionType: data.actionType })
+    if (newStatus && previousStatus !== newStatus) {
+      await this.eventBus.emit('user:status:changed', {
+        userId: data.targetId,
+        previousStatus,
+        newStatus,
+      })
+    }
     return action
   }
 

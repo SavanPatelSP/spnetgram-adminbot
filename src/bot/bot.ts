@@ -32,8 +32,7 @@ export async function startBot(): Promise<Telegraf> {
   const bot = createBot()
 
   if (!env.BOT_TOKEN) {
-    logger.warn('BOT_TOKEN not set, bot not started')
-    return bot
+    throw new Error('BOT_TOKEN is not set — bot cannot start')
   }
 
   await bot.launch()

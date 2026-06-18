@@ -106,4 +106,70 @@ export function registerModerationCommands(bot: Telegraf): void {
 
     await ctx.reply(`🚫 Banned @${targetUsername}\nReason: ${reason}`)
   })
+
+  bot.command('unban', async (ctx) => {
+    const args = ctx.message?.text?.split(' ')
+    if (!args || args.length < 2) {
+      await ctx.reply('Usage: /unban <username> <reason>')
+      return
+    }
+
+    const targetUsername = args[1].replace('@', '')
+    const reason = args.slice(2).join(' ')
+
+    const target = await usersService.findByTelegramUsername(targetUsername)
+    if (!target) {
+      await ctx.reply(`User @${targetUsername} not found.`)
+      return
+    }
+
+    const from = ctx.from!
+    const moderator = await usersService.findByTelegramId(BigInt(from.id))
+    if (!moderator) {
+      await ctx.reply('Could not identify you.')
+      return
+    }
+
+    const action = await moderationService.create({
+      moderatorId: moderator.id,
+      targetId: target.id,
+      actionType: 'UNBAN',
+      reason,
+    })
+
+    await ctx.reply(`✅ Unbanned @${targetUsername}\nReason: ${reason}`)
+  })
+
+  bot.command('unmute', async (ctx) => {
+    const args = ctx.message?.text?.split(' ')
+    if (!args || args.length < 2) {
+      await ctx.reply('Usage: /unmute <username> <reason>')
+      return
+    }
+
+    const targetUsername = args[1].replace('@', '')
+    const reason = args.slice(2).join(' ')
+
+    const target = await usersService.findByTelegramUsername(targetUsername)
+    if (!target) {
+      await ctx.reply(`User @${targetUsername} not found.`)
+      return
+    }
+
+    const from = ctx.from!
+    const moderator = await usersService.findByTelegramId(BigInt(from.id))
+    if (!moderator) {
+      await ctx.reply('Could not identify you.')
+      return
+    }
+
+    const action = await moderationService.create({
+      moderatorId: moderator.id,
+      targetId: target.id,
+      actionType: 'UNMUTE',
+      reason,
+    })
+
+    await ctx.reply(`🔊 Unmuted @${targetUsername}\nReason: ${reason}`)
+  })
 }

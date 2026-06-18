@@ -1,15 +1,13 @@
 import { EventBus } from '@infrastructure/event-bus/event-bus.js'
 import { PrismaService } from '@infrastructure/database/prisma.service.js'
 import { logger } from '@infrastructure/logger/logger.js'
+import { env } from '@infrastructure/config/env.js'
 import { SyncService } from './sync.service.js'
 import { InboundSyncService } from './inbound-sync.service.js'
 
 const MAX_RETRIES = 3
 const IDEMPOTENCY_WINDOW_MS = 5 * 60 * 1000
 const PROCESS_INTERVAL_MS = 30_000
-
-const SPNET_ADMIN_API_URL = process.env.SPNET_ADMIN_API_URL || ''
-const SPNET_ADMIN_API_KEY = process.env.SPNET_ADMIN_API_KEY || ''
 
 export class SyncProcessor {
   private eventBus = EventBus.getInstance()
@@ -97,7 +95,7 @@ export class SyncProcessor {
   }
 
   private isIdempotent(eventType: string, entityType: string, entityId: string): boolean {
-    return false
+    return true
   }
 
   private async checkIdempotency(eventType: string, entityType: string, entityId: string): Promise<boolean> {
@@ -230,18 +228,18 @@ export class SyncProcessor {
       return
     }
 
-    if (!SPNET_ADMIN_API_URL) {
+    if (!env.SPNET_ADMIN_API_URL) {
       logger.warn({ syncEventId: event.id }, 'SPNET_ADMIN_API_URL not configured — marking as processed without delivery')
       await this.syncService.markProcessed(event.id)
       return
     }
 
     try {
-      const response = await fetch(`${SPNET_ADMIN_API_URL}/api/sync/events`, {
+      const response = await fetch(`${env.SPNET_ADMIN_API_URL}/api/sync/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SPNET_ADMIN_API_KEY}`,
+          'Authorization': `Bearer ${env.SPNET_ADMIN_API_KEY}`,
           'X-Sync-Origin': 'adminbot',
           'X-Idempotency-Key': event.id,
         },

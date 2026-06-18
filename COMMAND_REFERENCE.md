@@ -2,7 +2,7 @@
 
 ## Overview
 
-- **Total commands**: 45 (2 public, 43 staff-guarded)
+- **Total commands**: 53 (2 public, 51 staff-guarded)
 - **Bot framework**: Telegraf
 - **Middleware**: `staffGuard()` for role-based access, `rateLimiter()` for rate limiting
 
@@ -39,6 +39,8 @@
 | `/warn <user> <reason>` | Issue a warning to a user |
 | `/mute <user> <minutes> <reason>` | Mute a user for N minutes |
 | `/ban <user> <reason>` | Ban a user from the platform |
+| `/unban <user> <reason>` | Unban a previously banned user |
+| `/unmute <user> <reason>` | Unmute a previously muted user |
 
 ### Cases
 
@@ -110,6 +112,22 @@
 | `/audit` | Global audit log query |
 | `/audituser <userId>` | Audit trail for a specific user |
 | `/auditstaff <staffId>` | Audit trail for a specific staff member |
+
+### Premium
+
+| Command | Description |
+|---------|-------------|
+| `/premium` | Premium overview and plan summary |
+| `/plans` | List all premium plans and pricing |
+| `/requestpremium <userId> <planId>` | Grant premium subscription to a user |
+| `/mypremium` | Check your own premium subscriptions |
+
+### Emergency
+
+| Command | Description |
+|---------|-------------|
+| `/lockdown <reason>` | Activate emergency lockdown (exempt roles bypass) |
+| `/liftlockdown` | Deactivate emergency lockdown |
 
 ### Dashboards
 

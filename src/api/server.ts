@@ -422,6 +422,27 @@ export function createServer(): Server {
   get('/api/sync/events/pending', async (_req, res) => handleController(_req, res, SyncController.pendingEvents, {}))
   get('/api/sync/events/failed', async (req, res) => handleController(req, res, SyncController.failedEvents, { query: (req as any).query || {} }))
 
+  // Webhook
+  post('/api/webhooks/spnet-admin', async (req, res, _p, body) => {
+    const webhookService = new (await import('../modules/sync/sync.service.js')).SyncService()
+    try {
+      const result = await webhookService.createEvent({
+        source: 'spnet-admin',
+        target: 'adminbot',
+        eventType: (body as any)?.event ?? 'webhook:received',
+        entityType: (body as any)?.entity ?? 'unknown',
+        entityId: (body as any)?.entityId ?? 'unknown',
+        action: (body as any)?.action ?? 'received',
+        payload: body as any,
+      })
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ status: 'ok', syncId: result.id }))
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : 'Webhook processing failed' }))
+    }
+  }, false)
+
   // Deep Links
   post('/api/deeplinks', withPermission('DEEPLINKS', 'CREATE', async (req, res, _p, body) => handleController(req, res, DeepLinkController.createLink, { body })))
   get('/api/deeplinks', async (req, res) => handleController(req, res, DeepLinkController.listLinks, { query: (req as any).query || {} }))

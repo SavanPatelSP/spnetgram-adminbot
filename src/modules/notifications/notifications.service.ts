@@ -2,6 +2,7 @@ import { PrismaService } from '@infrastructure/database/prisma.service.js'
 import { EventBus } from '@infrastructure/event-bus/event-bus.js'
 import { NotFoundError } from '@shared/errors/index.js'
 import { logger } from '@infrastructure/logger/logger.js'
+import { env } from '@infrastructure/config/env.js'
 import { generateId } from '../../shared/utils/id.js'
 import { NotificationChannel, NotificationType, NotificationCategory, NotificationQueryParams } from './notifications.types.js'
 
@@ -100,7 +101,7 @@ export class NotificationsService {
   }
 
   private async deliverViaTelegram(userId: string, title: string, body: string) {
-    const botToken = process.env.TELEGRAM_BOT_TOKEN
+    const botToken = env.BOT_TOKEN
     if (!botToken) return
 
     const userTelegramId = await this.getUserTelegramId(userId)

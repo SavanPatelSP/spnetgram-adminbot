@@ -5,12 +5,14 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3000),
   HOST: z.string().default('0.0.0.0'),
-  BOT_TOKEN: z.string().default(''),
+  BOT_TOKEN: z.string().min(1, 'BOT_TOKEN is required'),
   DATABASE_URL: z.string().default('postgresql://localhost:5432/spnetgram_adminbot'),
   REDIS_URL: z.string().default('redis://localhost:6379/0'),
   JWT_SECRET: z.string().default('dev-secret'),
   JWT_EXPIRES_IN: z.string().default('24h'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+  SPNET_ADMIN_API_URL: z.string().default(''),
+  SPNET_ADMIN_API_KEY: z.string().default(''),
 })
 
 const parsed = envSchema.safeParse(process.env)

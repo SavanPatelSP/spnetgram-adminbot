@@ -11,6 +11,8 @@ import { AuditService } from '../../../modules/audit/audit.service.js'
 import { SyncService } from '../../../modules/sync/sync.service.js'
 import { DeepLinkService } from '../../../modules/deeplinks/deeplinks.service.js'
 import { StaffService } from '../../../modules/staff/staff.service.js'
+import { LockdownService } from '../../../infrastructure/security/lockdown.service.js'
+import { UsersService } from '../../../modules/users/users.service.js'
 
 const securityService = new SecurityService()
 const monitoringService = new MonitoringService()
@@ -24,6 +26,8 @@ const auditService = new AuditService()
 const syncService = new SyncService()
 const deepLinkService = new DeepLinkService()
 const staffService = new StaffService()
+const lockdownService = new LockdownService()
+const usersService = new UsersService()
 
 function getArgs(ctx: { message?: { text?: string } }): string[] {
   const text = ctx.message?.text ?? ''
@@ -595,6 +599,37 @@ export function registerNewModuleCommands(bot: Telegraf): void {
       } else {
         await ctx.reply(`Audit staff error: ${err instanceof Error ? err.message : 'Unknown'}`)
       }
+    }
+  })
+
+  // ── Part G.5: Emergency Lockdown ──
+
+  bot.command('lockdown', async (ctx) => {
+    try {
+      const args = getArgs(ctx)
+      const reason = args.length > 0 ? args.join(' ') : 'Emergency lockdown activated by staff'
+      const from = ctx.from!
+      const moderator = await usersService.findByTelegramId(BigInt(from.id))
+      const initiatedBy = moderator?.id || from.id.toString()
+      await lockdownService.activate(reason, initiatedBy)
+      const status = await lockdownService.getStatus()
+      await ctx.replyWithMarkdown(
+        `*🚨 EMERGENCY LOCKDOWN ACTIVATED*\n\nReason: ${reason}\nInitiated by: \`${initiatedBy}\`\nTimestamp: ${status?.timestamp || new Date().toISOString()}\n\n_Only exempt roles (OWNER, SUPER_ADMINISTRATOR) can bypass._`,
+      )
+    } catch (err) {
+      await ctx.reply(`Lockdown error: ${err instanceof Error ? err.message : 'Unknown'}`)
+    }
+  })
+
+  bot.command('liftlockdown', async (ctx) => {
+    try {
+      const from = ctx.from!
+      const moderator = await usersService.findByTelegramId(BigInt(from.id))
+      const initiatedBy = moderator?.id || from.id.toString()
+      await lockdownService.deactivate(initiatedBy)
+      await ctx.replyWithMarkdown(`*✅ Lockdown Deactivated*\n\nLifted by: \`${initiatedBy}\``)
+    } catch (err) {
+      await ctx.reply(`Lift lockdown error: ${err instanceof Error ? err.message : 'Unknown'}`)
     }
   })
 

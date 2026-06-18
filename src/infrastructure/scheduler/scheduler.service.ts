@@ -1,3 +1,5 @@
+import { logger } from '../logger/logger.js'
+
 export interface ScheduledTask {
   name: string
   intervalMs: number
@@ -35,7 +37,7 @@ export class SchedulerService {
       try {
         await task.execute()
       } catch (err) {
-        console.error(`Scheduled task "${task.name}" failed:`, err)
+        logger.error({ taskName: task.name, err }, 'Scheduled task failed')
       }
     }, task.intervalMs)
     this.timers.set(task.name, timer)
