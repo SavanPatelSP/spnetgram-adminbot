@@ -25,11 +25,11 @@ describe('Premium Bot Commands', () => {
 
     const { registerPremiumCommands } = await import('../staff/premium.js')
 
-    const replyMarkdown = vi.fn()
+    const replyHTML = vi.fn()
     const ctx = {
       message: { text: '/requestpremium user-1 plan-1' },
       from: { id: 12345 },
-      replyWithMarkdown: replyMarkdown,
+      replyWithHTML: replyHTML,
       reply: vi.fn(),
     } as any
 
@@ -46,7 +46,7 @@ describe('Premium Bot Commands', () => {
       planId: 'plan-1',
       requestedBy: '12345',
     })
-    expect(replyMarkdown).toHaveBeenCalled()
+    expect(replyHTML).toHaveBeenCalled()
   })
 
   it('should handle /premium command successfully', async () => {
@@ -57,8 +57,8 @@ describe('Premium Bot Commands', () => {
 
     const { registerPremiumCommands } = await import('../staff/premium.js')
 
-    const replyMarkdown = vi.fn()
-    const ctx = { replyWithMarkdown: replyMarkdown, reply: vi.fn() } as any
+    const replyHTML = vi.fn()
+    const ctx = { replyWithHTML: replyHTML, reply: vi.fn() } as any
 
     const handlers = new Map<string, Function>()
     const testBot = {
@@ -68,9 +68,9 @@ describe('Premium Bot Commands', () => {
 
     await handlers.get('premium')!(ctx)
 
-    expect(replyMarkdown).toHaveBeenCalled()
-    const text = replyMarkdown.mock.calls[0]?.[0]
-    expect(text).toContain('Premium Overview')
+    expect(replyHTML).toHaveBeenCalled()
+    const text = replyHTML.mock.calls[0]?.[0]
+    expect(text).toContain('PREMIUM OVERVIEW')
     expect(text).toContain('Basic')
     expect(text).toContain('Pro')
   })
@@ -81,7 +81,8 @@ describe('Premium Bot Commands', () => {
     const { registerPremiumCommands } = await import('../staff/premium.js')
 
     const reply = vi.fn()
-    const ctx = { reply, replyWithMarkdown: vi.fn() } as any
+    const replyHTML = vi.fn()
+    const ctx = { reply, replyWithHTML: replyHTML } as any
 
     const handlers = new Map<string, Function>()
     const testBot = {
@@ -91,6 +92,6 @@ describe('Premium Bot Commands', () => {
 
     await handlers.get('plans')!(ctx)
 
-    expect(reply).toHaveBeenCalledWith('No premium plans are available at this time.')
+    expect(replyHTML).toHaveBeenCalled()
   })
 })

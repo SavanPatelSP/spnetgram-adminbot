@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { PermissionsService } from '../../modules/permissions/permissions.service.js'
 import { GovernanceService } from '../../modules/governance/governance.service.js'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 
 const permissionsService = new PermissionsService()
 const governanceService = new GovernanceService()
@@ -17,7 +18,7 @@ export function requirePermission(resource: string, action: string) {
     
     if (!staffId) {
       res.statusCode = 401
-      res.end(JSON.stringify({ error: 'Unauthorized', code: 'UNAUTHORIZED' }))
+      res.end(safeStringify({ error: 'Unauthorized', code: 'UNAUTHORIZED' }))
       return false
     }
 
@@ -34,7 +35,7 @@ export function requirePermission(resource: string, action: string) {
     if (tempCheck.allowed) return true
 
     res.statusCode = 403
-    res.end(JSON.stringify({ error: 'Forbidden: insufficient permissions', code: 'FORBIDDEN' }))
+    res.end(safeStringify({ error: 'Forbidden: insufficient permissions', code: 'FORBIDDEN' }))
     return false
   }
 }

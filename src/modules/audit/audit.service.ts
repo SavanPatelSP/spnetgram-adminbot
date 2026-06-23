@@ -2,6 +2,7 @@ import { PrismaService } from '@infrastructure/database/prisma.service.js'
 import { EventBus } from '@infrastructure/event-bus/event-bus.js'
 import { logger } from '@infrastructure/logger/logger.js'
 import { generateId } from '../../shared/utils/id.js'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 import { CreateAuditLogDto, AuditLogFilter, AuditLogQueryResult, ComplianceReport, AuditExportDto } from './audit.types.js'
 
 export class AuditService {
@@ -213,7 +214,7 @@ export class AuditService {
       const csvContent = csvRows.join('\n')
       fileUrl = `data:text/csv;base64,${Buffer.from(csvContent).toString('base64')}`
     } else {
-      const jsonContent = JSON.stringify(logs)
+      const jsonContent = safeStringify(logs)
       fileUrl = `data:application/json;base64,${Buffer.from(jsonContent).toString('base64')}`
     }
 

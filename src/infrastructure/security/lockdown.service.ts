@@ -1,5 +1,6 @@
 import { RedisService } from '../redis/redis.service.js'
 import { logger } from '../logger/logger.js'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 
 export class LockdownService {
   private readonly redis = RedisService.getInstance()
@@ -7,7 +8,7 @@ export class LockdownService {
   private readonly EXEMPT_ROLES_KEY = 'security:lockdown:exempt'
 
   async activate(reason: string, initiatedBy: string): Promise<void> {
-    await this.redis.set(this.LOCKDOWN_KEY, JSON.stringify({
+    await this.redis.set(this.LOCKDOWN_KEY, safeStringify({
       active: true,
       reason,
       initiatedBy,
@@ -34,7 +35,7 @@ export class LockdownService {
   }
 
   async setExemptRoles(roles: string[]): Promise<void> {
-    await this.redis.set(this.EXEMPT_ROLES_KEY, JSON.stringify(roles))
+    await this.redis.set(this.EXEMPT_ROLES_KEY, safeStringify(roles))
   }
 
   async getExemptRoles(): Promise<string[]> {

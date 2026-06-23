@@ -4,6 +4,7 @@ import { IpReputationService } from '../../infrastructure/security/ip-reputation
 import { LockdownService } from '../../infrastructure/security/lockdown.service.js'
 import { AuthService } from '../../infrastructure/auth/auth.service.js'
 import { logger } from '../../infrastructure/logger/logger.js'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 
 const rateLimiter = new RateLimiterService()
 const ipReputation = new IpReputationService()
@@ -17,7 +18,7 @@ export async function securityGuard(req: IncomingMessage, res: ServerResponse): 
   const ipCheck = await ipReputation.check(ip)
   if (!ipCheck.allowed) {
     res.statusCode = 429
-    res.end(JSON.stringify({ error: ipCheck.reason, code: 'IP_BLOCKED' }))
+    res.end(safeStringify({ error: ipCheck.reason, code: 'IP_BLOCKED' }))
     return false
   }
 
@@ -31,7 +32,7 @@ export async function securityGuard(req: IncomingMessage, res: ServerResponse): 
   if (!rateCheck.allowed) {
     res.setHeader('Retry-After', String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)))
     res.statusCode = 429
-    res.end(JSON.stringify({ error: 'Too many requests', code: 'RATE_LIMITED', resetAt: rateCheck.resetAt }))
+    res.end(safeStringify({ error: 'Too many requests', code: 'RATE_LIMITED', resetAt: rateCheck.resetAt }))
     return false
   }
 
@@ -40,7 +41,7 @@ export async function securityGuard(req: IncomingMessage, res: ServerResponse): 
     const role = (req as any).role
     if (staffId && role && !(await lockdown.isRoleExempt(role))) {
       res.statusCode = 503
-      res.end(JSON.stringify({
+      res.end(safeStringify({
         error: 'System is in emergency lockdown. Only exempt roles can perform actions.',
         code: 'LOCKDOWN',
       }))

@@ -1,5 +1,6 @@
 import { RedisService } from '../redis/redis.service.js'
 import { logger } from '../logger/logger.js'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 import type Redis from 'ioredis'
 
 export interface CacheOptions {
@@ -25,7 +26,7 @@ export class CacheService {
 
   async set<T>(key: string, value: T, options: CacheOptions): Promise<void> {
     const fullKey = `${this.KEY_PREFIX}${key}`
-    const serialized = JSON.stringify(value)
+    const serialized = safeStringify(value)
     await this.redis.setex(fullKey, options.ttl, serialized)
 
     if (options.tags && options.tags.length > 0) {

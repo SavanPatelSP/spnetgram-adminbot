@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { logger } from '../logger/logger.js'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 
 export class PrismaService {
   private static instance: PrismaService
@@ -24,7 +25,7 @@ export class PrismaService {
                 query: model,
                 action: operation,
                 duration: `${duration.toFixed(2)}ms`,
-                args: JSON.stringify(args).slice(0, 200),
+                args: safeStringify(args).slice(0, 200),
               }, 'Slow database query')
             }
 

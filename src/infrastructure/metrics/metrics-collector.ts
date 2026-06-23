@@ -1,5 +1,6 @@
 import { RedisService } from '../redis/redis.service.js'
 import { logger } from '../logger/logger.js'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 
 interface MetricPoint {
   value: number
@@ -34,12 +35,12 @@ export class MetricsCollector {
   }
 
   incrementCounter(name: string, value = 1, tags?: Record<string, string>): void {
-    const key = tags ? `${name}:${JSON.stringify(tags)}` : name
+    const key = tags ? `${name}:${safeStringify(tags)}` : name
     this.counters.set(key, (this.counters.get(key) || 0) + value)
   }
 
   setGauge(name: string, value: number, tags?: Record<string, string>): void {
-    const key = tags ? `${name}:${JSON.stringify(tags)}` : name
+    const key = tags ? `${name}:${safeStringify(tags)}` : name
     this.gauges.set(key, value)
   }
 

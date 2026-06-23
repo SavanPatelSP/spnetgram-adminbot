@@ -1,6 +1,7 @@
 import { RedisService } from '../redis/redis.service.js'
 import { randomUUID } from 'node:crypto'
 import { logger } from '../logger/logger.js'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 import type Redis from 'ioredis'
 
 export interface Job {
@@ -48,7 +49,7 @@ export class JobQueueService {
       maxRetries,
     }
 
-    await this.redis.lpush(`${this.QUEUE_PREFIX}${type}`, JSON.stringify(job))
+    await this.redis.lpush(`${this.QUEUE_PREFIX}${type}`, safeStringify(job))
     logger.debug({ jobId: job.id, type }, 'Job enqueued')
     return job
   }
@@ -76,11 +77,11 @@ export class JobQueueService {
     if (job.retries < job.maxRetries) {
       job.status = 'pending'
       job.startedAt = undefined
-      await this.redis.lpush(`${this.QUEUE_PREFIX}${job.type}`, JSON.stringify(job))
+      await this.redis.lpush(`${this.QUEUE_PREFIX}${job.type}`, safeStringify(job))
       logger.warn({ jobId: job.id, type: job.type, retries: job.retries }, 'Job will be retried')
     } else {
       job.status = 'failed'
-      await this.redis.lpush(`${this.DLQ_PREFIX}${job.type}`, JSON.stringify(job))
+      await this.redis.lpush(`${this.DLQ_PREFIX}${job.type}`, safeStringify(job))
       logger.error({ jobId: job.id, type: job.type, error }, 'Job moved to dead-letter queue')
     }
   }
@@ -135,7 +136,7 @@ export class JobQueueService {
         job.status = 'pending'
         job.retries = 0
         job.error = undefined
-        await this.redis.lpush(queueKey, JSON.stringify(job))
+        await this.redis.lpush(queueKey, safeStringify(job))
       }
       await this.redis.del(dlqKey)
       logger.info({ type, count: jobs.length }, 'Dead-letter jobs requeued')

@@ -1,5 +1,6 @@
 import { RedisService } from '../redis/redis.service.js'
 import { logger } from '../logger/logger.js'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 
 interface IpReputation {
   score: number
@@ -46,7 +47,7 @@ export class IpReputationService {
     }
 
     if (rep.score <= -50) rep.flagged = true
-    await this.redis.set(repKey, JSON.stringify(rep), 86400 * 7)
+    await this.redis.set(repKey, safeStringify(rep), 86400 * 7)
   }
 
   async check(ip: string): Promise<{ allowed: boolean; reason?: string }> {

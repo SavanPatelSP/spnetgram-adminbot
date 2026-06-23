@@ -2,6 +2,7 @@ import { PrismaService } from '@infrastructure/database/prisma.service.js'
 import { EventBus } from '@infrastructure/event-bus/event-bus.js'
 import { logger } from '@infrastructure/logger/logger.js'
 import { CacheService } from '@infrastructure/cache/cache.service.js'
+import { safeStringify } from '@shared/utils/safe-json.js'
 import {
   DashboardSnapshotType,
   StaffOverviewResult,
@@ -52,7 +53,7 @@ export class DashboardService {
   }
 
   async getModerationStats(params?: { page?: number; limit?: number }): Promise<ModerationStatsResult> {
-    const cacheKey = `dashboard:moderation-stats:${JSON.stringify(params ?? {})}`
+    const cacheKey = `dashboard:moderation-stats:${safeStringify(params ?? {})}`
     return this.cache.getOrSet(
       cacheKey,
       async () => {
@@ -100,7 +101,7 @@ export class DashboardService {
   }
 
   async getTicketStats(params?: { page?: number; limit?: number }): Promise<TicketStatsResult> {
-    const cacheKey = `dashboard:ticket-stats:${JSON.stringify(params ?? {})}`
+    const cacheKey = `dashboard:ticket-stats:${safeStringify(params ?? {})}`
     return this.cache.getOrSet(
       cacheKey,
       async () => {
@@ -160,7 +161,7 @@ export class DashboardService {
   }
 
   async getCaseStats(params?: { page?: number; limit?: number }): Promise<CaseStatsResult> {
-    const cacheKey = `dashboard:case-stats:${JSON.stringify(params ?? {})}`
+    const cacheKey = `dashboard:case-stats:${safeStringify(params ?? {})}`
     return this.cache.getOrSet(
       cacheKey,
       async () => {

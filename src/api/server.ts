@@ -2,6 +2,7 @@ import { createServer as createHttpServer, type Server, type IncomingMessage, ty
 import jwt from 'jsonwebtoken'
 import { env } from '../infrastructure/config/env.js'
 import { logger } from '../infrastructure/logger/logger.js'
+import { safeStringify } from '../shared/utils/safe-json.js'
 import { authGuard } from './middleware/auth-guard.js'
 import { requirePermission } from './middleware/permission-guard.js'
 import { errorHandler } from './middleware/error-handler.js'
@@ -107,19 +108,19 @@ export function createServer(): Server {
   get('/health', async (_req, res) => {
     const health = await healthService.check()
     res.statusCode = health.status === 'unhealthy' ? 503 : 200
-    res.end(JSON.stringify(health))
+    res.end(safeStringify(health))
   }, false)
 
   get('/health/live', async (_req, res) => {
     const alive = await healthService.checkLiveness()
     res.statusCode = alive ? 200 : 503
-    res.end(JSON.stringify({ status: alive ? 'alive' : 'dead' }))
+    res.end(safeStringify({ status: alive ? 'alive' : 'dead' }))
   }, false)
 
   get('/health/ready', async (_req, res) => {
     const ready = await healthService.checkReadiness()
     res.statusCode = ready ? 200 : 503
-    res.end(JSON.stringify({ status: ready ? 'ready' : 'not ready' }))
+    res.end(safeStringify({ status: ready ? 'ready' : 'not ready' }))
   }, false)
 
   // Auth - generate token pair
@@ -139,10 +140,10 @@ export function createServer(): Server {
         staffId,
       )
       res.statusCode = 200
-      res.end(JSON.stringify({ success: true, data: tokens }))
+      res.end(safeStringify({ success: true, data: tokens }))
     } catch (err) {
       res.statusCode = 401
-      res.end(JSON.stringify({ error: 'Authentication failed', code: 'AUTH_FAILED' }))
+      res.end(safeStringify({ error: 'Authentication failed', code: 'AUTH_FAILED' }))
     }
   }, false),
 
@@ -153,13 +154,13 @@ export function createServer(): Server {
       const decoded = authService.verifyToken(refreshToken)
       if (decoded.type !== 'refresh') {
         res.statusCode = 401
-        res.end(JSON.stringify({ error: 'Invalid token type', code: 'TOKEN_TYPE_ERROR' }))
+        res.end(safeStringify({ error: 'Invalid token type', code: 'TOKEN_TYPE_ERROR' }))
         return
       }
       const valid = await authService.validateRefreshToken(decoded.jti!, decoded.sub)
       if (!valid) {
         res.statusCode = 401
-        res.end(JSON.stringify({ error: 'Refresh token revoked', code: 'TOKEN_REVOKED' }))
+        res.end(safeStringify({ error: 'Refresh token revoked', code: 'TOKEN_REVOKED' }))
         return
       }
       await authService.revokeRefreshToken(decoded.jti!)
@@ -174,10 +175,10 @@ export function createServer(): Server {
       const newDecoded = jwt.decode(tokens.refreshToken) as any
       await authService.storeRefreshToken(newDecoded.jti, decoded.sub)
       res.statusCode = 200
-      res.end(JSON.stringify({ success: true, data: tokens }))
+      res.end(safeStringify({ success: true, data: tokens }))
     } catch (err) {
       res.statusCode = 401
-      res.end(JSON.stringify({ error: 'Invalid refresh token', code: 'INVALID_REFRESH' }))
+      res.end(safeStringify({ error: 'Invalid refresh token', code: 'INVALID_REFRESH' }))
     }
   }, false),
 
@@ -188,7 +189,7 @@ export function createServer(): Server {
       await authService.blacklistToken(jti, 900)
     }
     res.statusCode = 200
-    res.end(JSON.stringify({ success: true }))
+    res.end(safeStringify({ success: true }))
   }),
 
   // Auth - revoke all sessions
@@ -198,7 +199,7 @@ export function createServer(): Server {
       await authService.revokeAllUserSessions(staffId)
     }
     res.statusCode = 200
-    res.end(JSON.stringify({ success: true }))
+    res.end(safeStringify({ success: true }))
   }),
 
   // Users
@@ -436,10 +437,10 @@ export function createServer(): Server {
         payload: body as any,
       })
       res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ status: 'ok', syncId: result.id }))
+      res.end(safeStringify({ status: 'ok', syncId: result.id }))
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ error: err instanceof Error ? err.message : 'Webhook processing failed' }))
+      res.end(safeStringify({ error: err instanceof Error ? err.message : 'Webhook processing failed' }))
     }
   }, false)
 
@@ -485,7 +486,7 @@ export function createServer(): Server {
       const result = await controller(args)
       if (result && typeof result === 'object' && 'status' in result) {
         res.statusCode = result.status as number
-        res.end(JSON.stringify(result.body ?? {}))
+        res.end(safeStringify(result.body ?? {}))
       }
     } catch (err) {
       errorHandler(err as Error, req, res)
@@ -537,7 +538,7 @@ export function createServer(): Server {
     }
 
     res.statusCode = 404
-    res.end(JSON.stringify({ error: 'Not Found', code: 'NOT_FOUND' }))
+    res.end(safeStringify({ error: 'Not Found', code: 'NOT_FOUND' }))
     logger.info({ method, path: url.pathname, status: 404, duration: Date.now() - start })
   })
 

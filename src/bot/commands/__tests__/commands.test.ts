@@ -2,12 +2,11 @@ import { describe, it, expect, vi } from 'vitest'
 import type { Telegraf } from 'telegraf'
 
 describe('Bot Command Registration', () => {
-  const bot = { command: vi.fn(), use: vi.fn() } as unknown as Telegraf
+  const bot = { command: vi.fn(), use: vi.fn(), action: vi.fn() } as unknown as Telegraf
 
   it('should register all staff command modules', async () => {
     const { registerStaffCommands } = await import('../staff/index.js')
     registerStaffCommands(bot)
-    // staff, cases, tickets, investigations, moderation, departments, new-modules, guide
     expect(bot.use).toHaveBeenCalled()
   })
 
@@ -32,38 +31,39 @@ describe('Guide Command Content', () => {
     expect(typeof mod.registerGuideCommands).toBe('function')
   })
 
-  it('should have /guide command handler that returns markdown', async () => {
+  it('should have /guide command handler that returns HTML', async () => {
     const mod = await import('../staff/guide.js')
     const reply = vi.fn()
-    const replyWithMarkdown = vi.fn()
-    const ctx = { reply, replyWithMarkdown } as any
-    const bot = { command: vi.fn((name: string, handler: any) => { if (name === 'guide') handler(ctx) }) } as unknown as Telegraf
+    const replyWithHTML = vi.fn()
+    const ctx = { reply, replyWithHTML } as any
+    const bot = { command: vi.fn((name: string, handler: any) => { if (name === 'guide') handler(ctx) }), action: vi.fn() } as unknown as Telegraf
     mod.registerGuideCommands(bot)
-    expect(replyWithMarkdown).toHaveBeenCalled()
-    const markdown = replyWithMarkdown.mock.calls[0]?.[0]
-    if (markdown) {
-      expect(typeof markdown).toBe('string')
-      expect(markdown.length).toBeGreaterThan(100)
+    expect(replyWithHTML).toHaveBeenCalled()
+    const html = replyWithHTML.mock.calls[0]?.[0]
+    if (html) {
+      expect(typeof html).toBe('string')
+      expect(html.length).toBeGreaterThan(100)
+      expect(html).toContain('<b>')
     }
   })
 
   it('should have /commands command handler listing all categories', async () => {
     const mod = await import('../staff/guide.js')
     const reply = vi.fn()
-    const replyWithMarkdown = vi.fn()
-    const ctx = { reply, replyWithMarkdown } as any
-    const bot = { command: vi.fn((name: string, handler: any) => { if (name === 'commands') handler(ctx) }) } as unknown as Telegraf
+    const replyWithHTML = vi.fn()
+    const ctx = { reply, replyWithHTML } as any
+    const bot = { command: vi.fn((name: string, handler: any) => { if (name === 'commands') handler(ctx) }), action: vi.fn() } as unknown as Telegraf
     mod.registerGuideCommands(bot)
-    expect(replyWithMarkdown).toHaveBeenCalled()
+    expect(replyWithHTML).toHaveBeenCalled()
   })
 
   it('should have /examples command handler with usage patterns', async () => {
     const mod = await import('../staff/guide.js')
     const reply = vi.fn()
-    const replyWithMarkdown = vi.fn()
-    const ctx = { reply, replyWithMarkdown } as any
-    const bot = { command: vi.fn((name: string, handler: any) => { if (name === 'examples') handler(ctx) }) } as unknown as Telegraf
+    const replyWithHTML = vi.fn()
+    const ctx = { reply, replyWithHTML } as any
+    const bot = { command: vi.fn((name: string, handler: any) => { if (name === 'examples') handler(ctx) }), action: vi.fn() } as unknown as Telegraf
     mod.registerGuideCommands(bot)
-    expect(replyWithMarkdown).toHaveBeenCalled()
+    expect(replyWithHTML).toHaveBeenCalled()
   })
 })

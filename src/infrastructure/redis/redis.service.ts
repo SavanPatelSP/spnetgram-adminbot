@@ -1,5 +1,6 @@
 import Redis from 'ioredis'
 import { env } from '../config/env'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 
 export class RedisService {
   private static instance: RedisService
@@ -27,7 +28,7 @@ export class RedisService {
   }
 
   async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
-    const serialized = JSON.stringify(value)
+    const serialized = safeStringify(value)
     if (ttlSeconds) {
       await this.client.setex(key, ttlSeconds, serialized)
     } else {

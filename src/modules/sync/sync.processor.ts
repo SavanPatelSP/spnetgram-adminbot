@@ -2,6 +2,7 @@ import { EventBus } from '@infrastructure/event-bus/event-bus.js'
 import { PrismaService } from '@infrastructure/database/prisma.service.js'
 import { logger } from '@infrastructure/logger/logger.js'
 import { env } from '@infrastructure/config/env.js'
+import { safeStringify } from '@shared/utils/safe-json.js'
 import { SyncService } from './sync.service.js'
 import { InboundSyncService } from './inbound-sync.service.js'
 
@@ -243,7 +244,7 @@ export class SyncProcessor {
           'X-Sync-Origin': 'adminbot',
           'X-Idempotency-Key': event.id,
         },
-        body: JSON.stringify({
+        body: safeStringify({
           eventType: event.eventType,
           entityType: event.entityType,
           entityId: event.entityId,

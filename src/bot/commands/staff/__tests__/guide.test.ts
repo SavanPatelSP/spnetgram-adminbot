@@ -7,13 +7,13 @@ describe('Guide Commands', () => {
     expect(typeof mod.registerGuideCommands).toBe('function')
   })
 
-  it('should register /guide, /commands, /examples', async () => {
-    const bot = { command: vi.fn() } as unknown as Telegraf
+  it('should register /guide, /commands, /examples and actions', async () => {
+    const bot = { command: vi.fn(), action: vi.fn() } as unknown as Telegraf
     const { registerGuideCommands } = await import('../guide.js')
     registerGuideCommands(bot)
-    expect(bot.command).toHaveBeenCalledTimes(3)
     expect(bot.command).toHaveBeenCalledWith('guide', expect.any(Function))
     expect(bot.command).toHaveBeenCalledWith('commands', expect.any(Function))
     expect(bot.command).toHaveBeenCalledWith('examples', expect.any(Function))
+    expect(bot.action).toHaveBeenCalled()
   })
 })

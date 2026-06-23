@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import type { SignOptions } from 'jsonwebtoken'
 import { env } from '../../infrastructure/config/env.js'
 import { AuthService } from '../../infrastructure/auth/auth.service.js'
+import { safeStringify } from '../../shared/utils/safe-json.js'
 import { logger } from '../../infrastructure/logger/logger.js'
 
 const authService = new AuthService()
@@ -12,7 +13,7 @@ export async function authGuard(req: IncomingMessage, res: ServerResponse, _para
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.statusCode = 401
-    res.end(JSON.stringify({ error: 'Unauthorized', code: 'UNAUTHORIZED' }))
+    res.end(safeStringify({ error: 'Unauthorized', code: 'UNAUTHORIZED' }))
     return false
   }
 
@@ -23,13 +24,13 @@ export async function authGuard(req: IncomingMessage, res: ServerResponse, _para
 
     if (decoded.type === 'refresh') {
       res.statusCode = 401
-      res.end(JSON.stringify({ error: 'Use access token, not refresh token', code: 'TOKEN_TYPE_ERROR' }))
+      res.end(safeStringify({ error: 'Use access token, not refresh token', code: 'TOKEN_TYPE_ERROR' }))
       return false
     }
 
     if (decoded.jti && await authService.isBlacklisted(decoded.jti)) {
       res.statusCode = 401
-      res.end(JSON.stringify({ error: 'Token has been revoked', code: 'TOKEN_REVOKED' }))
+      res.end(safeStringify({ error: 'Token has been revoked', code: 'TOKEN_REVOKED' }))
       return false
     }
 
@@ -41,11 +42,11 @@ export async function authGuard(req: IncomingMessage, res: ServerResponse, _para
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
       res.statusCode = 401
-      res.end(JSON.stringify({ error: 'Token expired', code: 'TOKEN_EXPIRED' }))
+      res.end(safeStringify({ error: 'Token expired', code: 'TOKEN_EXPIRED' }))
       return false
     }
     res.statusCode = 401
-    res.end(JSON.stringify({ error: 'Invalid or expired token', code: 'UNAUTHORIZED' }))
+    res.end(safeStringify({ error: 'Invalid or expired token', code: 'UNAUTHORIZED' }))
     return false
   }
 }
