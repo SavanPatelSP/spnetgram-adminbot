@@ -42,7 +42,7 @@ Executive dashboards & company reports
 ${bold('⚙ System')}
 Health checks, sync status & incidents
 
-${italic('Use /guide <section> for details')}
+${italic('Use /guide [section] for details')}
 
 ${bold('See also:')}
 /commands  /examples  /help  /dashboard`,

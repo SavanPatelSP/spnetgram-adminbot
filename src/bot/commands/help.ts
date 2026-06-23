@@ -23,7 +23,7 @@ function buildHelpText(): string {
   for (const cat of CATEGORIES) {
     text += `${cat.emoji} ${bold(cat.label)}\n<code>${cat.commands}</code>\n\n`
   }
-  text += `${divider()}${italic('Use /guide <section> for detailed guides')}`
+  text += `${divider()}${italic('Use /guide [section] for detailed guides')}`
   return text
 }
 
